@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-  name="jupyter-oauth2-server",
+  name="jupyter_oauth2",
   # py_modules rather than packages, since we only have 1 file
   py_modules=['jupyter_oauth2', 'jupyter_oauth2_server'],
   entry_points={
