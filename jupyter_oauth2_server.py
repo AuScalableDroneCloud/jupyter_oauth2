@@ -96,11 +96,15 @@ class CallbackHandler(tornado.web.RequestHandler):
                 }
 
                 function sendMessageToParent(window, objMsg) {
-                    // debug('window.parent', window.parent);
+                    debug('window.parent', window.parent);
                     window.parent.postMessage(objMsg, '*');
                     if (window.parent.opener) {
-                        // debug('window.parent.opener', window.parent.opener);
+                        debug('window.parent.opener', window.parent.opener);
                         window.parent.opener.postMessage(objMsg, '*');
+                    }
+                    if (window.opener) {
+                        debug('window.opener', window.opener);
+                        window.opener.postMessage(objMsg, '*');
                     }
                 }
 
