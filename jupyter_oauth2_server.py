@@ -96,15 +96,16 @@ class CallbackHandler(tornado.web.RequestHandler):
                 }
 
                 function sendMessageToParent(window, objMsg) {
-                    debug('window.parent', window.parent);
-                    window.parent.postMessage(objMsg, '*');
-                    if (window.parent.opener) {
-                        debug('window.parent.opener', window.parent.opener);
-                        window.parent.opener.postMessage(objMsg, '*');
-                    }
                     if (window.opener) {
-                        debug('window.opener', window.opener);
+                        //debug('window.opener', window.opener);
                         window.opener.postMessage(objMsg, '*');
+                    } else if (window.parent) {
+                        //debug('window.parent', window.parent);
+                        window.parent.postMessage(objMsg, '*');
+                        //if (window.parent.opener) {
+                        //    //debug('window.parent.opener', window.parent.opener);
+                        //    window.parent.opener.postMessage(objMsg, '*');
+                        //}
                     }
                 }
 
@@ -165,6 +166,8 @@ class CallbackHandler(tornado.web.RequestHandler):
                 display('Close this tab/popup and start again.', 'msg');
 
                 console.log('done');
+
+                window.close();
             </script>
         </body>
 
