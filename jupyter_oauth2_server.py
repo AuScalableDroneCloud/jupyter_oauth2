@@ -48,27 +48,11 @@ class CallbackHandler(tornado.web.RequestHandler):
         </head>
 
         <body>
-            <h3>CALLBACK</h3>
+            <h1>OAuth2 Callback</h3>
             <div id="msg"></div>
 
             <script type="text/javascript">
                 //-- assets/util.js
-                function debug(name, variable) {
-                    console.log(name);
-                    console.log(variable);
-                }
-
-                function display(obj, id = 'authStatus', reset = false) {
-                    const e = document.getElementById(id);
-                    if (reset) {
-                        e.innerHTML = `${obj}<br/><br/>`;
-                    } else {
-                        e.innerHTML += `${obj}<br/><br/>`;
-                    }
-                }
-
-                ///////////////////////////////////////////////////////
-
                 function getDataFromCallbackUrl() {
                     const url1 = window.location.href.split('#')[1];
                     const url2 = window.location.href.split('?')[1];
@@ -97,13 +81,13 @@ class CallbackHandler(tornado.web.RequestHandler):
 
                 function sendMessageToParent(window, objMsg) {
                     if (window.opener) {
-                        //debug('window.opener', window.opener);
+                        //console.log('window.opener: ' + window.opener);
                         window.opener.postMessage(objMsg, '*');
                     } else if (window.parent) {
-                        //debug('window.parent', window.parent);
+                        //console.log('window.parent: ' + window.parent);
                         window.parent.postMessage(objMsg, '*');
                         //if (window.parent.opener) {
-                        //    //debug('window.parent.opener', window.parent.opener);
+                        //    //console.log('window.parent.opener: ' + window.parent.opener);
                         //    window.parent.opener.postMessage(objMsg, '*');
                         //}
                     }
@@ -114,7 +98,6 @@ class CallbackHandler(tornado.web.RequestHandler):
 
                 // extract urlData
                 const urlData = getDataFromCallbackUrl();
-                debug('urlData', urlData);
                 window.urlData = urlData;
 
                 // build id_token: JWT by openid spec
@@ -123,20 +106,18 @@ class CallbackHandler(tornado.web.RequestHandler):
                     id_token = parseJwt(urlData.id_token);
                     urlData.id_token = id_token;
                 }
-                debug('id_token', id_token);
-
-                debug('urlData', urlData);
-                window.urlData = urlData;
+                console.log('id_token: ' + id_token);
+                console.log('urlData: ' + urlData);
 
                 // check if urlData means an authentication error
+                var msg = document.getElementById('msg');
+                var msgHTML = '';
                 if (containsError(urlData)) {
                     // error in authentication
                     console.log('error in urlData');
 
-                    // display
-                    display('Authentication failed.', 'msg', true);
-                    display('urlData:', 'msg');
-                    display(JSON.stringify(urlData), 'msg');
+                    msgHTML = '<h2>Authentication failed.</h2><p>urlData:'
+                              + JSON.stringify(urlData) + '</p>';
 
                     // build message
                     objMsg = Object.assign({ statusAuth: 'error' }, urlData);
@@ -147,13 +128,12 @@ class CallbackHandler(tornado.web.RequestHandler):
                     // get access_token and code
                     const access_token = urlData.access_token || null;
                     const code = urlData.code || null;
-                    debug('access_token', access_token);
-                    debug('code', code);
+                    //console.log('access_token: ' + access_token);
+                    //console.log('code: ' + code);
 
-                    // display
-                    display('Authentication completed.', 'msg');
-                    display(`The access_token is ${access_token}`, 'msg', true);
-                    display(`The code is ${code}`, 'msg');
+                    msgHTML = '<h2>Authentication completed.</h2>'
+                    //msgHTML += `<p>The access_token is ${access_token}</p>`;
+                    //msgHTML += `<p>The code is ${code}</p>`;
 
                     // build message
                     objMsg = Object.assign({ statusAuth: 'ok' }, urlData);
@@ -162,8 +142,7 @@ class CallbackHandler(tornado.web.RequestHandler):
                 // post message back to parent window
                 sendMessageToParent(window, objMsg);
 
-                // display
-                display('Close this tab/popup and start again.', 'msg');
+                msg.innerHTML = msgHTML + '<p>Close this tab/popup and start again</p>'
 
                 console.log('done');
 
