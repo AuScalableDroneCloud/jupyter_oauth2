@@ -355,7 +355,7 @@ def _send(mode='popup'):
     script = temp_obj.substitute(URL=authurl, ID="auth_" + nonce, MODE=mode, PORT=port)
     display(HTML(script))
 
-async def connect(config=None, mode='popup', timeout_seconds=30):
+async def connect(config=None, mode='popup', timeout_seconds=30, scope=""):
     """
     Authenticate with the OAuth2 id provider
 
@@ -389,12 +389,16 @@ async def connect(config=None, mode='popup', timeout_seconds=30):
     timeout_seconds: int
         Seconds to wait for the authentication process to complete before
         raising an exception
-
+    scope : str
+        Any additional scopes to append to default list ('openid profile email' unless overridden)
     """
     global settings, access_token, token_data, _server
     if config is not None:
         setup(config)
     _check_settings()
+
+    if scope is not None:
+        settings["api_scope"] += " " + scope
 
     #Have a token already? Check if it is expired
     if token_data:
