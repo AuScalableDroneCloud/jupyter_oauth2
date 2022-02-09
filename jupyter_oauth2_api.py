@@ -91,15 +91,16 @@ def setup(config=None):
     global settings
     if config is None:
         #Try and load from env variables
+        #(use os.environ dict which throws exception if key not found)
         try:
-            settings["default_baseurl"] = os.getenv('JUPYTERHUB_URL') + '/user-redirect'
-            settings["api_audience"] = os.getenv('JUPYTER_OAUTH2_API_AUDIENCE')
-            settings["api_client_id"] = os.getenv('JUPYTER_OAUTH2_CLIENT_ID')
+            settings["default_baseurl"] = os.environ['JUPYTERHUB_URL'] + '/user-redirect'
+            settings["api_audience"] = os.environ['JUPYTER_OAUTH2_API_AUDIENCE']
+            settings["api_client_id"] = os.environ['JUPYTER_OAUTH2_CLIENT_ID']
             settings["api_scope"] = os.getenv('JUPYTER_OAUTH2_SCOPE', 'openid profile email')
-            settings["api_authurl"] = os.getenv('JUPYTER_OAUTH2_AUTH_PROVIDER_URL')
+            settings["api_authurl"] = os.environ['JUPYTER_OAUTH2_AUTH_PROVIDER_URL']
             settings["provided"] = True
         except Exception as e:
-            print(e)
+            logging.error("Error loading settings from env: ", str(e))
     else:
         settings = config
         settings["provided"] = True
@@ -122,7 +123,7 @@ def get_url():
     import os
     
     #Get from env if set
-    server_url = os.getenv('JUPYTER_URL')
+    server_url = os.getenv('JUPYTERHUB_URL')
     if server_url:
         baseurl = server_url + '/user-redirect'
     else:
@@ -139,7 +140,7 @@ def get_url():
             if d in cwd and len(d) > lastlen:
                 nbconfig = nbc
                 lastlen = len(d)
-        nbconfig
+
         if nbconfig['hostname'] == '0.0.0.0':
             #Default for ASDC
             baseurl = settings["default_baseurl"]
@@ -165,12 +166,10 @@ async def check_server(url):
     r = requests.get(U)
 
     if r.status_code >= 400:
-        print(r.status_code, r.reason)
-        raise(Exception("Failed to get a response from server!"))
+        logging.info("Server responded error: {} {}".format(r.status_code, r.reason))
+        raise(Exception("Server responded with error"))
     else:
-        print(r.status_code, r.reason)
-        print(r.text)
-        print('Server is responding')
+        logging.info("Server responded OK: {} {}\n{}".format(r.status_code, r.reason, r.text))
 
 def _serve():
     """
