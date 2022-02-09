@@ -44,19 +44,19 @@ config = {
 
 # Connect to the OAuth2 provider, default is to open a new window for the login
 # Pass the config dict above (this can also be loaded from environment variables
-# by calling auth.setup() beforehand
+# by not passing in a config dict, see the code for the variable names)
 await auth.connect(config)
 
 # Display info about a logged in user
 auth.showuserinfo()
 
 # Call an API with GET
-r = asdc.auth.call_api('/projects/')
+r = auth.call_api('/projects/')
 print(r.json())
 
 # Call an API with POST
 data = {'name': 'My Project', 'description': 'Created by API with token'}
-r = asdc.auth.call_api('/projects/', data)
+r = auth.call_api('/projects/', data)
 print(r.json())
 
 ```
