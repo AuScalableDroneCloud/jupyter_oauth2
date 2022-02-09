@@ -37,12 +37,12 @@ await auth.connect()
 auth.showuserinfo()
 
 #Call an API with GET
-r = asdc.auth.call_api('/projects/')
+r = auth.call_api('/projects/')
 print(r.json())
 
 #Call an API with POST
 data = {'name': 'My Project', 'description': 'Created by API with token'}
-r = asdc.auth.call_api('/projects/', data)
+r = auth.call_api('/projects/', data)
 print(r.json())
 
 ```
