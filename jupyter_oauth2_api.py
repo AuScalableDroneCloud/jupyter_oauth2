@@ -82,8 +82,7 @@ def setup(config=None):
     ...    "api_audience": 'https://MYSITE/api',
     ...    "api_client_id": 'CLIENT_ID_HERE',
     ...    "api_scope": 'openid profile email',
-    ...    "api_authurl": 'MY_OAUTH2_PROVIDER_URL',
-    ...    "provided" : False
+    ...    "api_authurl": 'MY_OAUTH2_PROVIDER_URL'
      ...   })
 
     Parameters
@@ -366,6 +365,26 @@ def _send(mode='popup'):
     script = temp_obj.substitute(URL=authurl, ID="auth_" + nonce, MODE=mode, PORT=port, NOW=str(int(time.time())))
     display(HTML(script))
 
+def is_notebook():
+    """
+    Detects if running within an interactive IPython notebook environment
+
+    Returns
+    -------
+    boolean
+        True if IPython detected and browser/notebook display capability detected
+    """
+    if 'IPython' not in sys.modules:
+        # IPython hasn't been imported, definitely not
+        return False
+    try:
+        from IPython import get_ipython
+        from IPython.display import display,Image,HTML
+    except:
+        return False
+    # check for `kernel` attribute on the IPython instance
+    return getattr(get_ipython(), 'kernel', None) is not None
+
 async def connect(config=None, mode='popup', timeout_seconds=30, scope=""):
     """
     Authenticate with the OAuth2 id provider
@@ -464,6 +483,128 @@ async def stop_server():
     _server.stop()
     _server = None
     port = None
+
+def device_connect(config=None, qrcode=True, scope=""):
+    """
+    Authenticate with the OAuth2 id provider using the device auth flow
+
+    This requires a different type of application and a new client_id on Auth0,
+    (Native app with device code grant enabled)
+
+    Thanks to Joe Parks for the code example:
+    https://gitlab.com/oscar6echo/ipyauth/-/issues/8#note_837687415
+
+    See also:
+    - https://auth0.com/docs/get-started/authentication-and-authorization-flow/device-authorization-flow
+    - https://auth0.com/docs/get-started/authentication-and-authorization-flow/call-your-api-using-the-device-authorization-flow
+
+    - Calls the auth api and awaits token,
+      requires user to click a link and authorise in the browser.
+    - Requires a configuration dict or setup() to be called first with the auth settings dict.
+
+    eg:
+
+    >>> import jupyter_oauth2_api as auth
+    ... await auth.connect_device({"api_audience": 'https://MYSITE/api',
+    ...    "api_client_id": 'CLIENT_ID_HERE',
+    ...    "api_scope": 'openid profile email',
+    ...    "api_authurl": 'MY_OAUTH2_PROVIDER_URL'
+    ...   })
+    ... print(auth.access_token)
+
+    Parameters
+    ----------
+    config: dict
+        The configuration dict, required if .setup() has not yet been called to
+        provide the settings.
+    qrcode: bool
+        Attempt to output a QR code with the auth url
+        Requires the qrcode python module
+    scope : str
+        Any additional scopes to append to default list ('openid profile email' unless overridden)
+    """
+    global settings, access_token, token_data, _server
+    if config is not None:
+        setup(config)
+    _check_settings()
+
+    if scope is not None:
+        settings["api_scope"] += " " + scope
+
+    if qrcode:
+        #Disable qrcode if module not installed
+        try:
+            import io
+            import qrcode
+        except (ImportError) as e:
+            qrcode = False
+            pass
+
+    headers = {
+        "content-type": "application/x-www-form-urlencoded",
+    }
+    data = {
+        "client_id": settings['api_client_id'],
+        "scope": settings['api_scope'],
+        "audience": settings['api_audience']
+    }
+
+    AUTH_DOMAIN = settings['api_authurl']
+    response = requests.post(f"{AUTH_DOMAIN}/oauth/device/code", headers=headers, data=data)
+    if response.status_code >= 500 or "error" in response.json():
+        print(response.json())
+        exit()
+
+    logging.info(response.json())
+    user_code = response.json()["user_code"]
+    verify_url = response.json()["verification_uri_complete"]
+    device_code = response.json()["device_code"]
+    if is_notebook():
+        from IPython.display import display, HTML
+
+        display(f"Click link below to authenticate (verify code={user_code})")
+        display(HTML(f'<h1>{user_code}</h1><a href="{verify_url}" target="_blank">{verify_url}</a>'))
+        if qrcode:
+            qr = qrcode.make(verify_url, box_size=5)
+            display(qr)
+    else:
+        print(f"Click or copy link below to authenticate (verify code={user_code})")
+        print(" _______________ ")
+        print("|               |")
+        print('|   \033[1m' + user_code + '\033[0m   |')
+        print("|_______________|\n")
+        print(verify_url)
+        if qrcode:
+            qr = qrcode.QRCode()
+            qr.add_data(verify_url)
+            qr.print_ascii()
+
+    headers2 = {
+        "content-type": "application/x-www-form-urlencoded",
+    }
+    data2 = {
+        "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+        "device_code": device_code,
+        "client_id": settings['api_client_id'],
+    }
+
+    logged_in = False
+    token = {}
+    while not logged_in:
+        time.sleep(2)
+        token = requests.post(f"{AUTH_DOMAIN}/oauth/token", headers=headers2, data=data2)
+        if token.status_code == 200:
+            if is_notebook():
+                from IPython.display import display
+
+                display(f"Successfully authenticated!")
+            else:
+                print("Successfully authenticated!")
+                logged_in = True
+        token_json = token.json()
+        if "access_token" in token_json:
+            access_token = token_json["access_token"]
+            break
 
 def call_api(url, data=None, throw=False):
     """

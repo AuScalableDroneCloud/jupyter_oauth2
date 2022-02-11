@@ -58,6 +58,34 @@ print(r.json())
 data = {'name': 'My Project', 'description': 'Created by API with token'}
 r = auth.call_api('/projects/', data)
 print(r.json())
+```
+
+### Device Auth Flow
+
+An alternative method is the Device Auth Flow which allows authenticating from a device that is not in a browser,
+or running in a non-authenticated or logged in context, it requires more user interaction as the user must follow
+a link and then confirm an 8 character code. If the qrcode module is installed a QR code can also be displayed
+for easier authentication via a mobile device.
+
+For Auth0 this requires a Native API app with the device flow enabled.
+
+Thanks to Joe Parks for making me aware of this and providing the example code here:
+https://gitlab.com/oscar6echo/ipyauth/-/issues/8#note_837687415
+
+```
+import jupyter_oauth2_api as auth
+
+config = {
+    "api_audience": 'https://MYSITE/api',
+    "api_client_id": 'CLIENT_ID_HERE',
+    "api_scope": 'openid profile email',
+    "api_authurl": 'MY_OAUTH2_PROVIDER_URL',
+}
+
+# Connect to the OAuth2 provider and generate a link for the user to authenticate
+# Pass the config dict above (this can also be loaded from environment variables
+# by not passing in a config dict, see the code for the variable names)
+await auth.device_connect(config)
 
 ```
 
