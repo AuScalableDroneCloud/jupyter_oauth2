@@ -10,5 +10,5 @@ setuptools.setup(
           'jupyter_oauth2 = jupyter_oauth2:setup_jupyter_oauth2',
       ]
   },
-  install_requires=['jupyter-server-proxy'],
+  install_requires=['jupyter-server-proxy', 'pillow', 'qrcode'],
 )
