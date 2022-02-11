@@ -52,6 +52,9 @@ import requests
 import json
 import os
 import logging
+import datetime
+import time
+import sys
 
 baseurl = ''      #Base jupyterhub url
 access_token = '' #Store the received token here
@@ -331,27 +334,36 @@ def _send(mode='popup'):
     from IPython.display import HTML
     from string import Template
     temp_obj = Template("""<script>
-    var mode = "$MODE";
-    var now = new Date().valueOf();
-    if (window.token) console.log("Token expired?: " + window.token['id_token']['exp']*1000 + ' > ' + now);
-    if (window.token && window.token['id_token']['exp']*1000 > now) {
-        //Use saved token on client side
-        postTokenGET_$PORT(window.token, true); //Pass re-use flag to skip verification
-    } else {
-        if (mode == 'popup') {
-            window.open("$URL");
-        } else if (mode == 'iframe') {
-            var el = document.getElementById('$ID');
-            el.innerHTML = '<iframe src="$URL" width="400px" height="300px" style="border:1px solid #ccc;">';
-        } else if (mode == 'link') {
-            var el = document.getElementById('$ID');
-            el.innerHTML = '<h3><a href="$URL" target="_blank" rel="opener">Click here to login</a></h3>';
+    //This code only has 10 seconds to run after the output produced
+    //(Prevents re-running from saved notebook output)
+    var now = new Date().getTime();
+    var ts = new Date(document.getElementById('$ID').dataset.timestamp * 1000);
+    if (now - ts < 10000) {
+        var mode = "$MODE";
+        var now = new Date().valueOf();
+        if (window.token) console.log("Token expired?: " + window.token['id_token']['exp']*1000 + ' > ' + now);
+        if (window.token && window.token['id_token']['exp']*1000 > now) {
+            //Use saved token on client side
+            postTokenGET_$PORT(window.token, true); //Pass re-use flag to skip verification
+        } else {
+            if (mode == 'popup') {
+                window.open("$URL");
+            } else if (mode == 'iframe') {
+                var el = document.getElementById('$ID');
+                el.innerHTML = '<iframe src="$URL" width="400px" height="300px" style="border:1px solid #ccc;">';
+                //el.innerHTML = '<iframe src="$URL" width="0px" height="0px">';
+            } else if (mode == 'link') {
+                var el = document.getElementById('$ID');
+                el.innerHTML = '<h3><a href="$URL" target="_blank" rel="opener">Click here to login</a></h3>';
+            }
         }
+    } else {
+      console.log("Fragment expired, skipping run: " + new Date(now).toUTCString() + " : " + new Date(ts).toUTCString());
     }
     </script>
-    <div id="$ID"></div>
+    <div id="$ID" data-timestamp="$NOW"></div>
     """)
-    script = temp_obj.substitute(URL=authurl, ID="auth_" + nonce, MODE=mode, PORT=port)
+    script = temp_obj.substitute(URL=authurl, ID="auth_" + nonce, MODE=mode, PORT=port, NOW=str(int(time.time())))
     display(HTML(script))
 
 async def connect(config=None, mode='popup', timeout_seconds=30, scope=""):
@@ -401,7 +413,6 @@ async def connect(config=None, mode='popup', timeout_seconds=30, scope=""):
 
     #Have a token already? Check if it is expired
     if token_data:
-        import datetime
         ts = int(token_data['id_token']['exp'])
         dt = datetime.datetime.fromtimestamp(ts)
         now = datetime.datetime.now(tz=None)
