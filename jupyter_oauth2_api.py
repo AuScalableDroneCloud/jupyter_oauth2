@@ -536,7 +536,7 @@ def device_connect(config=None, qrcode=True, scope=""):
         try:
             import io
             import qrcode
-            import pillow
+            from PIL import Image
         except (ImportError) as e:
             qrcode = False
             pass
