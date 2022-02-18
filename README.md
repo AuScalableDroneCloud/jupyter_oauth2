@@ -85,7 +85,7 @@ config = {
 # Connect to the OAuth2 provider and generate a link for the user to authenticate
 # Pass the config dict above (this can also be loaded from environment variables
 # by not passing in a config dict, see the code for the variable names)
-await auth.device_connect(config)
+auth.device_connect(config)
 
 ```
 
