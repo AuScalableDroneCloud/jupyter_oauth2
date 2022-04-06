@@ -70,6 +70,7 @@ settings = {
     "api_client_id": 'CLIENT_ID_HERE',
     "api_scope": 'openid profile email',
     "api_authurl": 'MY_OAUTH2_PROVIDER_URL',
+    "token_prefix": 'JWT',
     "provided" : False
 }
 
@@ -98,13 +99,14 @@ def setup(config=None):
             settings["default_baseurl"] = os.environ['JUPYTERHUB_URL'] + '/user-redirect'
             settings["api_audience"] = os.environ['JUPYTER_OAUTH2_API_AUDIENCE']
             settings["api_client_id"] = os.environ['JUPYTER_OAUTH2_CLIENT_ID']
-            settings["api_scope"] = os.getenv('JUPYTER_OAUTH2_SCOPE', 'openid profile email')
+            settings["api_scope"] = os.getenv('JUPYTER_OAUTH2_SCOPE', settings["api_scope"])
             settings["api_authurl"] = os.environ['JUPYTER_OAUTH2_AUTH_PROVIDER_URL']
+            settings["token_prefix"] = os.getenv('JUPYTER_OAUTH2_PREFIX', settings["token_prefix"])
             settings["provided"] = True
         except Exception as e:
             logging.error("Error loading settings from env: ", str(e))
     else:
-        settings = config
+        settings.update(config)
         settings["provided"] = True
 
 def _check_settings():
@@ -634,7 +636,7 @@ def call_api(url, data=None, throw=False):
     headersAPI = {
     'accept': 'application/json',
     'Content-type': 'application/json',
-    'Authorization': 'Bearer ' + access_token if access_token else '',
+    'Authorization': settings["token_prefix"] + ' ' + access_token if access_token else '',
     }
     
     #POST if data provided, otherwise GET
@@ -685,9 +687,9 @@ def call_api_js(url, callback="alert()", data=None):
         var callback = $CALLBACK;
         var xhr = new XMLHttpRequest();
         xhr.open("$METHOD", "$URL");
-        xhr.setRequestHeader("Authorization", "Bearer $TOKEN");
+        xhr.setRequestHeader("Authorization", "$PREFIX $TOKEN");
         //Can also just grab it from window...
-        //xhr.setRequestHeader("Authorization", "Bearer " + window.token['access_token']);
+        //xhr.setRequestHeader("Authorization", "$PREFIX " + window.token['access_token']);
         xhr.responseType = 'json';
         xhr.onload = function() {
             // Request finished. Do processing here.
@@ -713,7 +715,7 @@ def call_api_js(url, callback="alert()", data=None):
     """)
     script = temp_obj.substitute(DATA=json.dumps(data),
                 CODE=code, METHOD=method, URL=url,
-                TOKEN=access_token, CALLBACK=callback)
+                TOKEN=access_token, PREFIX=settings["token_prefix"], CALLBACK=callback)
     display(HTML(script))
 
 def userinfo():
