@@ -70,7 +70,8 @@ settings = {
     "api_client_id": 'CLIENT_ID_HERE',
     "api_scope": 'openid profile email',
     "api_authurl": 'MY_OAUTH2_PROVIDER_URL',
-    "token_prefix": 'JWT',
+    #"token_prefix": 'JWT',
+    "token_prefix": 'Bearer',
     "provided" : False
 }
 
@@ -609,7 +610,7 @@ def device_connect(config=None, qrcode=True, scope=""):
             access_token = token_json["access_token"]
             break
 
-def call_api(url, data=None, throw=False):
+def call_api(url, data=None, throw=False, prefix=settings["token_prefix"]):
     """
     Call an API endpoint
 
@@ -636,7 +637,7 @@ def call_api(url, data=None, throw=False):
     headersAPI = {
     'accept': 'application/json',
     'Content-type': 'application/json',
-    'Authorization': settings["token_prefix"] + ' ' + access_token if access_token else '',
+    'Authorization': prefix + ' ' + access_token if access_token else '',
     }
     
     #POST if data provided, otherwise GET
@@ -652,7 +653,7 @@ def call_api(url, data=None, throw=False):
     #print(r.text)
     return r
 
-def call_api_js(url, callback="alert()", data=None):
+def call_api_js(url, callback="alert()", data=None, prefix=settings["token_prefix"]):
     """
     Call an API endpoint from the browser via Javascript, appends a script to the page to 
     do the request.
@@ -715,7 +716,7 @@ def call_api_js(url, callback="alert()", data=None):
     """)
     script = temp_obj.substitute(DATA=json.dumps(data),
                 CODE=code, METHOD=method, URL=url,
-                TOKEN=access_token, PREFIX=settings["token_prefix"], CALLBACK=callback)
+                TOKEN=access_token, PREFIX=prefix, CALLBACK=callback)
     display(HTML(script))
 
 def userinfo():
@@ -727,7 +728,7 @@ def userinfo():
     dict
         json dict containing user info
     """
-    r = call_api(settings["api_authurl"] + '/userinfo')
+    r = call_api(settings["api_authurl"] + '/userinfo') #, prefix='Bearer')
     data = r.json()
     return data
 
