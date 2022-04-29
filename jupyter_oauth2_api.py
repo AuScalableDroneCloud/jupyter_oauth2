@@ -348,16 +348,18 @@ def _send(mode='popup'):
             //Use saved token on client side
             postTokenGET_$PORT(window.token, true); //Pass re-use flag to skip verification
         } else {
+            var html = '';
             if (mode == 'popup') {
                 window.open("$URL");
+                html += '(Authentication window may not appear if you have a popup blocker, <a href="$URL" target="_blank" rel="opener">Click here to login</a> instead)';
             } else if (mode == 'iframe') {
-                var el = document.getElementById('$ID');
-                el.innerHTML = '<iframe src="$URL" width="400px" height="300px" style="border:1px solid #ccc;">';
-                //el.innerHTML = '<iframe src="$URL" width="0px" height="0px">';
+                html = '<iframe src="$URL" width="0px" height="0px">';
+            } else if (mode == 'iframe_debug') {
+                html = '<iframe src="$URL" width="400px" height="300px" style="border:1px solid #ccc;">';
             } else if (mode == 'link') {
-                var el = document.getElementById('$ID');
-                el.innerHTML = '<h3><a href="$URL" target="_blank" rel="opener">Click here to login</a></h3>';
+                html += '<h3><a href="$URL" target="_blank" rel="opener">Click here to login</a></h3>';
             }
+            document.getElementById('$ID').innerHTML = html;
         }
     } else {
       console.log("Fragment expired, skipping run: " + new Date(now).toUTCString() + " : " + new Date(ts).toUTCString());
@@ -646,6 +648,9 @@ def call_api(url, data=None, throw=False, prefix=settings["token_prefix"]):
     else:
         r = requests.get(url, headers=headersAPI)
     
+    #Note: if response is 403 Forbidden {'detail': 'Username not available'}
+    # this is because the user hasn't logged in to the main site yet with this auth method
+    # (ie: originally logged in with github, use AAF to auth with jupyter)
     if r.status_code >= 400:
         print(r.status_code, r.reason)
         if throw:
