@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
   name="jupyter_oauth2",
   # py_modules rather than packages, since we only have a few files
-  py_modules=['jupyter_oauth2', 'jupyter_oauth2_server', 'jupyter_oauth2_api'],
+  py_modules=['jupyter_oauth2', 'jupyter_oauth2_server', 'jupyter_oauth2_api', 'jupyter_oauth2_custom'],
   entry_points={
       'jupyter_serverproxy_servers': [
           # name = packagename:function_name

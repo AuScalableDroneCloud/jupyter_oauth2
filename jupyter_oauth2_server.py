@@ -4,7 +4,7 @@ import tornado.httpclient
 import tornado.httputil
 import sys
 import os
-import custom
+import jupyter_oauth2_custom
 
 class CallbackHandler(tornado.web.RequestHandler):
     def get(self):
@@ -156,7 +156,7 @@ class CallbackHandler(tornado.web.RequestHandler):
 
 class CustomHandler(tornado.web.RequestHandler):
     def get(self):
-        custom.handler(self)
+        jupyter_oauth2_custom.handler(self)
 
 if __name__ == "__main__":
     print("Starting OAuth2 callback server", sys.argv)
