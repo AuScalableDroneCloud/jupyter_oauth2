@@ -5,6 +5,20 @@ import tornado.httputil
 import sys
 import os
 
+class PostHandler(tornado.web.RequestHandler):
+    def post(self):
+        """
+        Additional function for ASDC
+        - Write post content to users home dir
+        """
+        filename = self.get_argument('filename')
+        content = self.get_argument('content')
+
+        from pathlib import Path
+        with open(str(Path.home() / filename), 'w') as f:
+            f.write(content)
+        self.write(filename)
+
 class CallbackHandler(tornado.web.RequestHandler):
     def get(self):
         #Following page HTML and Javascript from ipyauth
@@ -156,7 +170,8 @@ class CallbackHandler(tornado.web.RequestHandler):
 if __name__ == "__main__":
     print("Starting OAuth2 callback server", sys.argv)
     app = tornado.web.Application([
-        (r"/callback", CallbackHandler)
+        (r"/callback", CallbackHandler),
+        (r"/addfile", PostHandler)
     ])
     app.listen(sys.argv[1])
     tornado.ioloop.IOLoop.current().start()
