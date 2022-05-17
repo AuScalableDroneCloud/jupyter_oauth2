@@ -154,15 +154,10 @@ class CallbackHandler(tornado.web.RequestHandler):
         </html>
         """)
 
-class CustomHandler(tornado.web.RequestHandler):
-    def get(self):
-        custom.handler(self)
-
 if __name__ == "__main__":
     print("Starting OAuth2 callback server", sys.argv)
     app = tornado.web.Application([
-        (r"/callback", CallbackHandler),
-        (r"/custom", CustomHandler)
+        (r"/callback", CallbackHandler)
     ])
     app.listen(sys.argv[1])
     tornado.ioloop.IOLoop.current().start()
