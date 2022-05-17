@@ -658,6 +658,51 @@ def call_api(url, data=None, throw=False, prefix=settings["token_prefix"]):
     #print(r.text)
     return r
 
+def download(url, filename=None, throw=False, prefix=settings["token_prefix"]):
+    """
+    Call an API endpoint to download a file
+
+    Parameters
+    ----------
+    url: str
+        endpoint url, either full uri or path / which will be appended to "api_audience" url from settings
+    filename: str
+        local filename, if not provided will use the filename from the url
+    throw: bool
+        throw exception on http errors, default: False
+
+    Returns
+    -------
+    str
+        local filename saved
+    """
+    global access_token
+    if url[0:4] != "http":
+        #Prepend the configured api url
+        url = settings["api_audience"] + url
+
+    #WebODM api call
+    headersAPI = {
+    'accept': 'application/json',
+    'Content-type': 'application/json',
+    'Authorization': prefix + ' ' + access_token if access_token else '',
+    }
+
+    if filename is None:
+        filename = url.split('/')[-1]
+
+    # NOTE the stream=True parameter below
+    #https://stackoverflow.com/a/16696317
+    with requests.get(url, headers=headersAPI, stream=True) as r:
+        r.raise_for_status()
+        with open(filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                # If you have chunk encoded response uncomment if
+                # and set chunk_size parameter to None.
+                #if chunk:
+                f.write(chunk)
+    return filename
+
 def call_api_js(url, callback="alert()", data=None, prefix=settings["token_prefix"]):
     """
     Call an API endpoint from the browser via Javascript, appends a script to the page to 
