@@ -28,7 +28,7 @@ await asdc.auth.connect(mode='iframe')
 project = '{PID}'
 task = '{TID}'
 filename = '{ASSET}'
-asdc.download(project, task, asset)
+asdc.download(project, task, filename)
 
 """
 
