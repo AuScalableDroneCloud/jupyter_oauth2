@@ -353,7 +353,7 @@ def _send(mode='popup'):
                 window.open("$URL");
                 html += '(Authentication window may not appear if you have a popup blocker, <a href="$URL" target="_blank" rel="opener">Click here to login</a> instead)';
             } else if (mode == 'iframe') {
-                html = '<iframe src="$URL" width="0px" height="0px">';
+                html = '<iframe src="$URL" style="width: 0; height: 0; border: 0;">';
             } else if (mode == 'iframe_debug') {
                 html = '<iframe src="$URL" width="400px" height="300px" style="border:1px solid #ccc;">';
             } else if (mode == 'link') {
