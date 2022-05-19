@@ -10,10 +10,11 @@ def handler(request):
     """
 
     #Write a python module to import the selected task
-    filename = 'task.py'
     project = request.get_argument('project')
     task = request.get_argument('task')
     asset = request.get_argument('asset', 'orthophoto.tif')
+    redirect = request.get_argument('redirect', 'yes')
+    filename = 'task_{0}.py'.format(task)
 
     content = """
     import asdc
@@ -28,5 +29,9 @@ def handler(request):
     with open(str(Path.home() / filename), 'w') as f:
         f.write(content)
 
-    request.write(filename)
+    if redirect == 'yes':
+        self.redirect("/user-redirect/lab/tree/" + filename)
+    else:
+        request.write(filename)
+
 
