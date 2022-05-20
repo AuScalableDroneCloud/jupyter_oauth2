@@ -6,6 +6,26 @@ import sys
 import os
 import jupyter_oauth2_custom
 
+class RootHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("""
+        <!DOCTYPE html>
+        <html lang="en">
+
+        <head>
+            <meta charset="utf-8" />
+            <title>Jupyter_OAuth2</title>
+        </head>
+
+        <body>
+            <h1>Jupyter_OAuth2</h3>
+            <p>This extension provides an OAuth2 callback for Jupyter environments</p>
+            <p>(plus ASDC API extensions)/p>
+        </body>
+
+        </html>
+        """)
+
 class CallbackHandler(tornado.web.RequestHandler):
     def get(self):
         #Following page HTML and Javascript from ipyauth
@@ -161,6 +181,7 @@ class CustomHandler(tornado.web.RequestHandler):
 if __name__ == "__main__":
     print("Starting OAuth2 callback server", sys.argv)
     app = tornado.web.Application([
+        (r"/", RootHandler),
         (r"/callback", CallbackHandler),
         (r"/custom", CustomHandler)
     ])

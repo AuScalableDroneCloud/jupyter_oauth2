@@ -1,19 +1,4 @@
 py_base = """
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#   kernel_info:
-#     name: python3
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
-
 # + [markdown] inputHidden=false outputHidden=false
 # # Loading a data set from ASDC WebODM
 #
